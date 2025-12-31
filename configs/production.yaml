@@ -1,6 +1,6 @@
 run:
-  name: "demo"
-  max_steps: 20  # Assez pour voir tous les mouvements
+  name: "production"  # This triggers production agent
+  max_steps: 25  # Enough for full production line
   seed: 42
 
 paths:

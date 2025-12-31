@@ -1,28 +1,31 @@
 """
-Simple demo agent that performs visible Factorio actions.
+Simple demo agent - MOVEMENT DEMO
 
-Uses only BASIC FLE commands that are guaranteed to work.
+Makes the character move in a visible square pattern.
+You'll see the player moving around in Factorio!
 """
 
 DEMO_ACTIONS = [
-    # Step 0-4: Place a visible line of walls
-    "place_entity('stone-wall', position={'x': 0, 'y': 0})",
-    "place_entity('stone-wall', position={'x': 1, 'y': 0})",
-    "place_entity('stone-wall', position={'x': 2, 'y': 0})",
-    "place_entity('stone-wall', position={'x': 3, 'y': 0})",
-    "place_entity('stone-wall', position={'x': 4, 'y': 0})",
-    # Step 5-9: Place another line
-    "place_entity('stone-wall', position={'x': 0, 'y': 2})",
-    "place_entity('stone-wall', position={'x': 1, 'y': 2})",
-    "place_entity('stone-wall', position={'x': 2, 'y': 2})",
-    "place_entity('stone-wall', position={'x': 3, 'y': 2})",
-    "place_entity('stone-wall', position={'x': 4, 'y': 2})",
-    # Step 10-14: Connect them
-    "place_entity('stone-wall', position={'x': 0, 'y': 1})",
-    "place_entity('stone-wall', position={'x': 4, 'y': 1})",
-    "sleep(120)",  # Pause so user can see
-    "print('Demo complete - you should see walls!')",
-    "score()",
+    # Move in a square pattern - very visible!
+    "move_to(Position(x=0, y=0))",
+    "sleep(60)",
+    "move_to(Position(x=10, y=0))",
+    "sleep(60)",
+    "move_to(Position(x=10, y=10))",
+    "sleep(60)",
+    "move_to(Position(x=0, y=10))",
+    "sleep(60)",
+    "move_to(Position(x=0, y=0))",
+    "sleep(60)",
+    # Do it again for emphasis!
+    "move_to(Position(x=-10, y=0))",
+    "sleep(60)",
+    "move_to(Position(x=-10, y=-10))",
+    "sleep(60)",
+    "move_to(Position(x=0, y=-10))",
+    "sleep(60)",
+    "move_to(Position(x=0, y=0))",
+    "print('Movement demo complete!')",
 ]
 
 

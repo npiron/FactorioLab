@@ -49,11 +49,17 @@ def run_episode(cfg: AppConfig, mode: str = "fake") -> None:
         # Run episode
         with out.open("w", encoding="utf-8") as f:
             for step in range(cfg.run.max_steps):
-                # Use demo agent for FLE mode, otherwise simple print
+                # Choose agent based on mode and config
                 if mode == "fle":
-                    from factorio_ai_lab.demo_agent import get_demo_code
+                    # Check if we want production agent
+                    if "production" in cfg.run.name.lower():
+                        from factorio_ai_lab.production_agent import get_production_code
 
-                    code = get_demo_code(step)
+                        code = get_production_code(step)
+                    else:
+                        from factorio_ai_lab.demo_agent import get_demo_code
+
+                        code = get_demo_code(step)
                 else:
                     # Simple policy for fake mode: just print step number
                     code = f'print("Step {step}")'
