@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: factorio-ai-lab
+Version: 0.1.0
+Summary: Factorio AI Lab: runner, metrics, prompts, and experiment harness.
+Requires-Python: >=3.11
+Requires-Dist: pyyaml>=6.0.0
+Provides-Extra: dev
+Requires-Dist: ruff>=0.6.0; extra == "dev"
+Requires-Dist: mypy>=1.10.0; extra == "dev"
+Requires-Dist: pytest>=8.0.0; extra == "dev"
+Requires-Dist: pre-commit>=3.7.0; extra == "dev"

@@ -1,0 +1,2 @@
+[console_scripts]
+falab = factorio_ai_lab.cli:main
