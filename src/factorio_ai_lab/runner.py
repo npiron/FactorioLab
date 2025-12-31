@@ -39,11 +39,24 @@ def run_episode(cfg: AppConfig, mode: str = "fake") -> None:
         result = env.reset()
         print(f"[falab] reset: {result.stdout[:100]}")
 
+        # Check if reset failed
+        if result.done or result.stderr:
+            print("[falab] ERROR during reset!")
+            print(f"[falab] stderr: {result.stderr}")
+            print("[falab] Aborting run.")
+            return
+
         # Run episode
         with out.open("w", encoding="utf-8") as f:
             for step in range(cfg.run.max_steps):
-                # Simple policy: just print step number
-                code = f'print("Step {step}")'
+                # Use demo agent for FLE mode, otherwise simple print
+                if mode == "fle":
+                    from factorio_ai_lab.demo_agent import get_demo_code
+
+                    code = get_demo_code(step)
+                else:
+                    # Simple policy for fake mode: just print step number
+                    code = f'print("Step {step}")'
 
                 # Execute step
                 result = env.step(code)
@@ -59,6 +72,10 @@ def run_episode(cfg: AppConfig, mode: str = "fake") -> None:
                     "done": result.done,
                 }
                 f.write(json.dumps(log_entry) + "\n")
+
+                # Print progress for FLE mode
+                if mode == "fle":
+                    print(f"[falab] step {step}: {code[:60]}...")
 
                 if result.done:
                     print(f"[falab] episode ended at step {step}")

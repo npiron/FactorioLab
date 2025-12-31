@@ -1,0 +1,10 @@
+run:
+  name: "demo"
+  max_steps: 15  # Assez pour voir toutes les actions du démo
+  seed: 42
+
+paths:
+  runs_dir: "runs"
+
+agent:
+  prompt_path: "src/factorio_ai_lab/prompts/early_bootstrap.txt"

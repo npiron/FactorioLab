@@ -113,7 +113,7 @@ class FleEnv:
                 # Connect to existing cluster instance
                 port = 27000 + self.instance_id
                 self.instance = self.Instance(
-                    address=f"localhost:{port}",
+                    address="localhost",
                     tcp_port=port,
                     fast=True,
                 )
@@ -130,9 +130,12 @@ class FleEnv:
                 done=False,
             )
         except Exception as e:
+            import traceback
+
+            error_detail = traceback.format_exc()
             return StepResult(
                 stdout="",
-                stderr=f"[FleEnv] Reset error: {e}",
+                stderr=f"[FleEnv] Reset error: {e}\n{error_detail}",
                 reward=0.0,
                 info={"error": str(e)},
                 done=True,
