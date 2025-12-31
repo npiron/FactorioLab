@@ -96,9 +96,9 @@ class FleEnv:
 
         # Try to import FLE
         try:
-            from fle import Instance  # type: ignore
+            from fle.env.instance import FactorioInstance  # type: ignore
 
-            self.Instance = Instance
+            self.Instance = FactorioInstance
             self.instance: Any = None
         except ImportError as e:
             raise RuntimeError(
@@ -110,18 +110,20 @@ class FleEnv:
         try:
             # Initialize FLE instance if not already done
             if self.instance is None:
+                # Connect to existing cluster instance
+                port = 27000 + self.instance_id
                 self.instance = self.Instance(
-                    address=f"localhost:{27015 + self.instance_id}",
-                    tcp_port=27015 + self.instance_id,
+                    address=f"localhost:{port}",
+                    tcp_port=port,
                     fast=True,
                 )
 
             # Reset the instance
-            obs = self.instance.reset()
+            self.instance.reset()
             self.step_count = 0
 
             return StepResult(
-                stdout=f"[FleEnv] Reset successful: {obs}",
+                stdout="[FleEnv] Reset successful",
                 stderr="",
                 reward=0.0,
                 info={"seed": self.seed, "mode": "fle", "instance_id": self.instance_id},
@@ -149,13 +151,13 @@ class FleEnv:
 
         try:
             # Execute code via FLE REPL
-            response = self.instance.step(code)
+            response = self.instance.eval(code)
             self.step_count += 1
 
-            # Parse FLE response
-            stdout = response.get("stdout", "")
-            stderr = response.get("stderr", "")
-            reward = response.get("reward", 0.0)
+            # Parse FLE response - adjust based on actual FLE API
+            stdout = str(response) if response else ""
+            stderr = ""
+            reward = 0.0  # FLE doesn't have reward by default
 
             # Extract metrics if available
             info = {
@@ -164,12 +166,7 @@ class FleEnv:
                 "instance_id": self.instance_id,
             }
 
-            if "production_score" in response:
-                info["ps"] = response["production_score"]
-            if "milestones" in response:
-                info["milestones"] = response["milestones"]
-
-            done = response.get("done", False)
+            done = False
 
             return StepResult(stdout=stdout, stderr=stderr, reward=reward, info=info, done=done)
         except Exception as e:

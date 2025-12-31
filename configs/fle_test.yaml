@@ -1,0 +1,10 @@
+run:
+  name: "fle-test"
+  max_steps: 10  # Only 10 steps for first test
+  seed: 42
+
+paths:
+  runs_dir: "runs"
+
+agent:
+  prompt_path: "src/factorio_ai_lab/prompts/early_bootstrap.txt"
