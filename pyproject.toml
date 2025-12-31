@@ -1,0 +1,31 @@
+[project]
+name = "factorio-ai-lab"
+version = "0.1.0"
+description = "Factorio AI Lab: runner, metrics, prompts, and experiment harness."
+requires-python = ">=3.11"
+dependencies = [
+  "pyyaml>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.6.0",
+  "mypy>=1.10.0",
+  "pytest>=8.0.0",
+  "pre-commit>=3.7.0",
+]
+
+[project.scripts]
+falab = "factorio_ai_lab.cli:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

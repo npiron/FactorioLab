@@ -1,0 +1,10 @@
+run:
+  name: "smoke"
+  max_steps: 50
+  seed: 123
+
+paths:
+  runs_dir: "runs"
+
+agent:
+  prompt_path: "src/factorio_ai_lab/prompts/early_bootstrap.txt"
