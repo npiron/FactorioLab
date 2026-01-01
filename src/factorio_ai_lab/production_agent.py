@@ -1,47 +1,91 @@
 """
-Production Line Agent - First Iron Plate Production
+Production Line Agent - OFFICIAL FLE PATTERNS
 
-This agent builds a complete production line:
-1. Find iron ore patch
-2. Place burner mining drills on iron
-3. Place stone furnaces
-4. Insert fuel (coal) into drills and furnaces
-5. Set up basic iron plate production
-
-User will see a real production line being built!
+Based on real working examples from FLE documentation.
+Uses nearest() for resource finding and Entity object persistence.
 """
 
 PRODUCTION_ACTIONS = [
-    # Step 0-2: Get resources and position
-    "pos = inspect_inventory().position",
-    "iron_patch = get_resource_patch(Resource.IronOre, pos)",
-    "coal_patch = get_resource_patch(Resource.Coal, pos)",
-    # Step 3-5: Harvest initial resources manually
-    "harvest_resource(iron_patch.bounding_box.center, quantity=50)",
-    "harvest_resource(coal_patch.bounding_box.center, quantity=50)",
-    "sleep(60)",
-    # Step 6-8: Craft initial buildings
-    "craft_item(Prototype.BurnerMiningDrill, quantity=3)",
-    "craft_item(Prototype.StoneFurnace, quantity=3)",
-    "sleep(60)",
-    # Step 9-11: Place 3 drills on iron patch
-    "drill1_pos = iron_patch.bounding_box.left_top\nplace_entity(Prototype.BurnerMiningDrill, position=drill1_pos, direction=Direction.DOWN)",
-    "drill2_pos = Position(x=drill1_pos.x + 3, y=drill1_pos.y)\nplace_entity(Prototype.BurnerMiningDrill, position=drill2_pos, direction=Direction.DOWN)",
-    "drill3_pos = Position(x=drill2_pos.x + 3, y=drill2_pos.y)\nplace_entity(Prototype.BurnerMiningDrill, position=drill3_pos, direction=Direction.DOWN)",
-    # Step 12: Fuel the drills
-    "insert_item(Prototype.BurnerMiningDrill, drill1_pos, Prototype.Coal, quantity=5)\ninsert_item(Prototype.BurnerMiningDrill, drill2_pos, Prototype.Coal, quantity=5)\ninsert_item(Prototype.BurnerMiningDrill, drill3_pos, Prototype.Coal, quantity=5)",
-    "sleep(120)",  # Watch drills start mining
-    # Step 13-15: Place 3 furnaces next to drills
-    "furnace1_pos = Position(x=drill1_pos.x, y=drill1_pos.y + 3)\nplace_entity(Prototype.StoneFurnace, position=furnace1_pos)",
-    "furnace2_pos = Position(x=drill2_pos.x, y=drill2_pos.y + 3)\nplace_entity(Prototype.StoneFurnace, position=furnace2_pos)",
-    "furnace3_pos = Position(x=drill3_pos.x, y=drill3_pos.y + 3)\nplace_entity(Prototype.StoneFurnace, position=furnace3_pos)",
-    # Step 16: Fuel the furnaces
-    "insert_item(Prototype.StoneFurnace, furnace1_pos, Prototype.Coal, quantity=10)\ninsert_item(Prototype.StoneFurnace, furnace2_pos, Prototype.Coal, quantity=10)\ninsert_item(Prototype.StoneFurnace, furnace3_pos, Prototype.Coal, quantity=10)",
-    # Step 17-19: Add ore to furnaces manually
-    "insert_item(Prototype.StoneFurnace, furnace1_pos, Prototype.IronOre, quantity=10)\ninsert_item(Prototype.StoneFurnace, furnace2_pos, Prototype.IronOre, quantity=10)\ninsert_item(Prototype.StoneFurnace, furnace3_pos, Prototype.IronOre, quantity=10)",
-    "sleep(180)",  # Watch furnaces smelt iron
-    # Step 20: Check production
-    "print('Production line complete! Iron plates being produced.')\nscore()",
+    # Step 0-1: Find and harvest iron using nearest()
+    """
+iron_pos = nearest(Resource.IronOre)
+print(f'Found iron at {iron_pos}')
+move_to(iron_pos)
+harvested_iron = harvest_resource(iron_pos, quantity=50)
+print(f'Harvested {harvested_iron} iron ore')
+""",
+    # Step 2-3: Find and harvest coal
+    """
+coal_pos = nearest(Resource.Coal)
+print(f'Found coal at {coal_pos}')
+move_to(coal_pos)
+harvested_coal = harvest_resource(coal_pos, quantity=50)
+print(f'Harvested {harvested_coal} coal')
+""",
+    # Step 4-5: Craft buildings
+    """
+crafted_drills = craft_item(Prototype.BurnerMiningDrill, quantity=2)
+print(f'Crafted {crafted_drills} burner mining drills')
+crafted_furnaces = craft_item(Prototype.StoneFurnace, quantity=2)
+print(f'Crafted {crafted_furnaces} stone furnaces')
+""",
+    # Step 6: Place first drill on iron
+    """
+drill1 = place_entity(Prototype.BurnerMiningDrill, position=nearest(Resource.IronOre), direction=Direction.DOWN)
+print(f'Placed drill 1 at {drill1.position}')
+""",
+    # Step 7: Fuel drill 1
+    """
+drill1 = insert_item(Prototype.Coal, drill1, quantity=10)
+print(f'Fueled drill 1 - status: {drill1.status}')
+""",
+    # Step 8: Place second drill
+    """
+drill2_pos = Position(x=drill1.position.x + 3, y=drill1.position.y)
+drill2 = place_entity(Prototype.BurnerMiningDrill, position=drill2_pos, direction=Direction.DOWN)
+print(f'Placed drill 2 at {drill2.position}')
+""",
+    # Step 9: Fuel drill 2
+    """
+drill2 = insert_item(Prototype.Coal, drill2, quantity=10)
+print(f'Fueled drill 2')
+sleep(60)  # Watch drills start mining
+""",
+    # Step 10: Place furnace near drill 1
+    """
+furnace1_pos = Position(x=drill1.position.x, y=drill1.position.y + 3)
+furnace1 = place_entity(Prototype.StoneFurnace, position=furnace1_pos, direction=Direction.UP)
+print(f'Placed furnace 1 at {furnace1.position}')
+""",
+    # Step 11: Fuel and feed furnace 1
+    """
+furnace1 = insert_item(Prototype.Coal, furnace1, quantity=10)
+furnace1 = insert_item(Prototype.IronOre, furnace1, quantity=20)
+print(f'Fueled and loaded furnace 1')
+""",
+    # Step 12: Place furnace near drill 2
+    """
+furnace2_pos = Position(x=drill2.position.x, y=drill2.position.y + 3)
+furnace2 = place_entity(Prototype.StoneFurnace, position=furnace2_pos, direction=Direction.UP)
+print(f'Placed furnace 2 at {furnace2.position}')
+""",
+    # Step 13: Fuel and feed furnace 2
+    """
+furnace2 = insert_item(Prototype.Coal, furnace2, quantity=10)
+furnace2 = insert_item(Prototype.IronOre, furnace2, quantity=20)
+print(f'Fueled and loaded furnace 2')
+sleep(120)  # Watch smelting
+""",
+    # Step 14: Verify production
+    """
+print(f'Drill 1 status: {drill1.status}')
+print(f'Drill 2 status: {drill2.status}')
+print(f'Furnace 1 status: {furnace1.status}')
+print(f'Furnace 2 status: {furnace2.status}')
+print('=== PRODUCTION LINE COMPLETE ===')
+print('2 drills mining iron + 2 furnaces smelting = Iron plates!')
+score()
+""",
 ]
 
 
@@ -50,5 +94,4 @@ def get_production_code(step: int) -> str:
     if step < len(PRODUCTION_ACTIONS):
         return PRODUCTION_ACTIONS[step]
     else:
-        # Monitor production
         return "score()"

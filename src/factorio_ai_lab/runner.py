@@ -51,8 +51,12 @@ def run_episode(cfg: AppConfig, mode: str = "fake") -> None:
             for step in range(cfg.run.max_steps):
                 # Choose agent based on mode and config
                 if mode == "fle":
-                    # Check if we want production agent
-                    if "production" in cfg.run.name.lower():
+                    # Check agent type from config name
+                    if "starter" in cfg.run.name.lower():
+                        from factorio_ai_lab.starter_agent import get_starter_code
+
+                        code = get_starter_code(step)
+                    elif "production" in cfg.run.name.lower():
                         from factorio_ai_lab.production_agent import get_production_code
 
                         code = get_production_code(step)

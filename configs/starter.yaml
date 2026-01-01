@@ -1,0 +1,10 @@
+run:
+  name: "starter"  # Active l'agent starter
+  max_steps: 10    # 6 étapes suffisent
+  seed: 42
+
+paths:
+  runs_dir: "runs"
+
+agent:
+  prompt_path: "src/factorio_ai_lab/prompts/early_bootstrap.txt"
