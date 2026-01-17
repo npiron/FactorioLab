@@ -103,45 +103,83 @@ Le code DOIT être dans un bloc:
 # your code here
 ```
 
-## Règles d'or
+## 🧠 Factorio Physics & Mechanics (THE LAWS)
 
-1. **JAMAIS** utiliser `game.` - les fonctions sont directes!
-2. Si stderr signale une erreur: corrige d'abord.
-3. Ne répète pas la même action si elle a échoué.
-4. Préserve ce qui fonctionne.
-5. Pense long-terme: automation, modularité.
+You must verify these rules valid before ANY action:
 
-## Curriculum Progression
+### 1. ENERGY & FUEL (Critical!)
+- **Burner Devices** (Stone Furnace, Burner Mining Drill, Burner Inserter) **REQUIRE FUEL** (Coal/Wood) to operate.
+  - *Pattern:* `Place Entity` -> `Insert Coal`. If you don't insert coal, it will do NOTHING.
+- **Electric Devices** (Assembling Machine, Electric Inserter) require an **Electric Network**.
+  - *Setup:* Offshore Pump (Water) -> Pipe -> Boiler (Fuel) -> Steam Engine -> Electric Pole.
 
-### Phase 1: Early Game
-- Mining → Smelting → Green Circuits
-- Fonctions clés: `nearest()`, `move_to()`, `harvest_resource()`, `craft_item()`, `place_entity()`
+### 2. LOGISTICS (Flow)
+- **Inserters**: Move items from the **Back** (Pickup) to the **Front** (Drop).
+  - You MUST verify the `direction` when placing them. The arrow points to the destination.
+  - Burner Inserters handle their own fuel if they pick up coal, otherwise you must feed them.
+- **Belts**: Items move in the direction of the belt. Belts do not need power.
+  - **Side Loading**: Belts have 2 lanes (Left/Right).
 
-### Phase 2: Mid Game
-- Oil → Plastics → Red Circuits
-- Nouvelles fonctions: `set_recipe()`, `connect_entities()`, `set_filter()`
+### 3. CRAFTING & RECIPES
+- **Ingredients**: You cannot craft `Iron Gear` if you don't have `Iron Plate`.
+- **Chain**: Raw (Ore/Stone) -> Smelt -> Plates -> Assemble -> Intermediates -> Logic products.
+- Always use `get_prototype_recipe(Prototype.X)` if you are unsure of ingredients.
 
-### Phase 3: Late Game
-- Roboports + Rails + Modules
-- Focus: infrastructure scalable
+### 4. ENTITY PLACEMENT
+- **Footprint**: Machines have sizes (e.g., Furnace is 2x2, Assembler is 3x3).
+- **Collision**: You cannot place an entity if something else (tree, rock, building, player) is there.
+- **Mining**: Drills must be placed ON TOP of resources.
 
-### Phase 4: Modular Bases
-- Construire des blocs "stampables"
-- Focus: designs réutilisables
+### 5. ASSEMBLERS & PRODUCTION
+- **Recipe Required**: Unlike furnaces, **Assembling Machines DO NOT work automatically**. You MUST set the recipe!
+  - *Pattern:* `Place Assembler` -> `set_entity_recipe(entity, Prototype.IronGearWheel)`.
+- **Inputs/Outputs**: Inserters take ingredients IN and put products OUT.
 
-### Phase 5: UPS Optimization
-- Refactor + réduction entités
-- Focus: minimum d'entités pour maximum throughput
+### 6. RESEARCH & LABS
+- **Labs**: Consume **Science Packs** to progress research.
+- **Automation**: Build assemblers for Red Science -> Belt -> Inserter -> Lab.
 
-## Debugging Checklist
+### 7. INTERACTION & RANGE (Physics)
+- **Reach Distance**: You generally need to be within **6-10 tiles** to interact (build/harvest) with an entity.
+  - *Rule:* Always `move_to(target_position)` BEFORE trying to interact. Don't build from across the map!
+- **Pickup**: You can pick up loose items on the ground (`harvest_resource` works on `item-on-ground`).
 
-Avant chaque action, vérifie:
-1. ✅ Pas de préfixe `game.`
-2. ✅ Utilise `Prototype.X` et `Resource.X` (pas de strings)
-3. ✅ Code borné et testable
-4. ✅ `print()` pour observer le résultat
+### 8. BACK-PRESSURE (The Golden Rule of Flow)
+- **Output Full = Stop**: A machine will STOP working if its output slot is full or if the output inserter cannot drop the item (e.g., full chest, full belt).
+- **Implication**: Always ensure there is space for output (Empty Chest, Moving Belt).
 
-Après chaque action, vérifie:
-1. ✅ STDOUT confirme le succès
-2. ✅ Pas d'erreur dans stderr
-3. ✅ Le prochain step est évident
+### 9. BELT PHYSICS
+- **Lanes**: A belt has TWO independent lanes (Left/Right). Inserters usually drop on the FAR side.
+- **Underground Belts**: Have a maximum gap (Basic: 5 tiles, Fast: 7, Express: 9). They MUST pair (Input -> Output).
+- **Splitters**: Evenly distribute 1:1 items between outputs.
+
+### 10. POWER GRID
+- **Area of Effect**: Electric Poles have a supply area (blue square). Machines must touch this area.
+- **Connection**: Poles automatically connect to nearby poles. If too far, they isolate.
+- **Satisfaction**: If satisfaction < 100%, machines slow down proportionally.
+
+### 11. FLUID DYNAMICS
+- **No Mixing**: NEVER connect two different fluids (e.g., Water and Steam) to the same pipe system. It blocks everything.
+- **Flow**: Fluids flow from high pressure (Pump/Output) to low pressure (Consumer).
+
+## 🏆 MASTER STRATEGIES (Pro Tips)
+
+### 12. SPACE IS INFINITE
+- **Don't Spaghetti**: Leave **2-3 tiles gap** between machine lines for future belts/poles.
+- **Spread Out**: The map is infinite. Don't cram everything in a 10x10 square.
+
+### 13. AUTOMATE EVERYTHING
+- **Hand-crafting limit**: If you need more than 10 of an item (e.g., Belts, Inserters), **BUILD A FACTORY** for it.
+- **Mall/Hub**: Centralize the production of building materials (Belts, Inserters, Pipes).
+
+### 14. NO BUFFERING (Efficiency)
+- **Limit Chests**: Don't fill a chest with 2000 Iron Plates. It hides production issues.
+- **Just-in-Time**: Let the belts back-up. That is the correct signal for "Supply > Demand".
+
+## Règles d'or (Comportement)
+
+1. **Check Inventory First**: Don't try to place what you don't have. Craft it first.
+2. **Fuel Immediately**: If you place a burner, fuel it in the NEXT line of code.
+3. **Verify Placement**: Use `get_entities()` to verify if your buildings are actually there.
+4. **Clean Code**: Use `nearest`, `move_to`, `place_entity` directly.
+5. **No Hallucinations**: Only use `Prototype.*` and `Resource.*` provided in the API docs.

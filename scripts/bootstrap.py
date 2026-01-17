@@ -1,379 +1,198 @@
 """
-Bootstrap COMPLET pour une mini-base automatisée
-Objectif: Produire les composants de base pour les Green Circuits
-
-PROGRESSION:
-1. Extraction automatique (foreuses + belts)
-2. Fonderie en ligne (plusieurs fourneaux)
-3. Production de composants (gears, copper wire)
-4. Finalement: Green Circuits
-
+Bootstrap INTRODUCTIF: Apprendre les bases proprement
+Objectif: Maîtriser le craft manuel, le placement d'entités uniques, et le stockage.
 """
 
 import json
 from datetime import datetime
 from pathlib import Path
 
-# Objectif clair
+# Nouvel objectif : Apprentissage progressif
 GOAL = """
-🎯 OBJECTIF MINI-BASE:
-Construire une base automatisée qui produit:
-1. Un BELT de plaques de fer (10+ fourneaux en ligne)
-2. Un BELT de plaques de cuivre (10+ fourneaux en ligne)
-3. Une machine d'assemblage qui fait des engrenages (iron gears)
-4. Une machine d'assemblage qui fait des câbles de cuivre
-5. Finalement: Une machine qui fait des circuits électroniques (green circuits)
+🎯 OBJECTIF TUTORIEL:
+1. Récolter juste assez de pierre (5) pour UN fourneau.
+2. Crafter et poser CE fourneau.
+3. Faire cuire quelques minerais de fer manuellement.
+4. Crafter UN coffre en bois.
+5. Stocker le surplus dans le coffre.
 
-Tout doit être AUTOMATISÉ avec des belts et des inserters!
+NE PAS surconsommer les ressources ! Commence PETIT.
 """
 
-# Patterns pour construire la mini-base
-MINIBASE_CURRICULUM = [
+# Curriculum progressif
+TUTORIAL_CURRICULUM = [
     # ============================================
-    # PHASE A: Préparation (craft items de base)
+    # ETAPE 1: Le premier fourneau
     # ============================================
     {
-        "type": "A1_craft_initial_items",
-        "category": "A_preparation",
+        "type": "1_craft_one_furnace",
+        "category": "basics",
         "order": 1,
-        "description": "Fabriquer les items de base nécessaires (fourneaux, drills, inserters, belts)",
-        "code": """# Fabriquer les items de base avec l'inventaire de départ
-# On a déjà les ressources, on peut directement fabriquer!
+        "description": "Récolter 5 pierres et crafter UN seul fourneau.",
+        "code": """# Etape 1: Crafter UN fourneau
+# Il faut 5 pierres. Si on ne les a pas, on les récolte.
 
-# Fourneaux (beaucoup!)
-craft_item(Prototype.StoneFurnace, quantity=12)
+inv = inspect_inventory()
+stone_count = inv.get(Prototype.Stone, 0)
 
-# Burner mining drills
-craft_item(Prototype.BurnerMiningDrill, quantity=4)
+if stone_count < 5:
+    print(f"Pas assez de pierre ({stone_count}/5). Récolte...")
+    stone_pos = nearest(Resource.Stone)
+    move_to(stone_pos)
+    # Juste assez pour un fourneau !
+    harvest_resource(stone_pos, quantity=5) 
 
-# Burner inserters
-craft_item(Prototype.BurnerInserter, quantity=10)
-
-# Transport belts (beaucoup!)
-craft_item(Prototype.TransportBelt, quantity=100)
-
-inventory = inspect_inventory()
-print(f'Crafted basic items: {inventory}')""",
+# Crafter UN SEUL fourneau
+craft_item(Prototype.StoneFurnace, quantity=1)
+print("✅ Premier fourneau crafté !")
+""",
     },
     # ============================================
-    # PHASE B: Ligne de fonderie FER
+    # ETAPE 2: Cuisson manuelle
     # ============================================
     {
-        "type": "B1_place_iron_drill",
-        "category": "B_iron_smelting",
+        "type": "2_smelt_iron_manual",
+        "category": "basics",
+        "order": 2,
+        "description": "Poser le fourneau et cuire 10 fers.",
+        "code": """# Etape 2: Utiliser le fourneau
+# On va faire des plaques de fer qui serviront pour la suite.
+
+# Trouver une zone libre près du fer (pour pas marcher trop)
+iron_ore_pos = nearest(Resource.IronOre)
+target_pos = Position(x=iron_ore_pos.x + 3, y=iron_ore_pos.y)
+move_to(target_pos)
+
+# Poser le fourneau
+furnace = place_entity(Prototype.StoneFurnace, target_pos)
+
+# Mettre du carburant (Coal ou Wood)
+# On récolte un peu de bois ou charbon si besoin
+fuel = Prototype.Coal if nearest(Resource.Coal) else Prototype.Wood
+fuel_pos = nearest(Resource.Coal if fuel == Prototype.Coal else Resource.Tree)
+
+move_to(fuel_pos)
+harvest_resource(fuel_pos, quantity=5)
+
+# Retour au fourneau
+move_to(furnace.position)
+insert_item(fuel, furnace, quantity=5)
+
+# Mettre du minerai de fer
+harvest_resource(iron_ore_pos, quantity=5) # Prendre un peu de minerai
+move_to(furnace.position)
+insert_item(Prototype.IronOre, furnace, quantity=5)
+
+print(f"✅ Fourneau en marche à {furnace.position}")
+""",
+    },
+    # ============================================
+    # ETAPE 3: Stockage (Coffre)
+    # ============================================
+    {
+        "type": "3_craft_and_use_chest",
+        "category": "logistics",
         "order": 3,
-        "description": "Placer une foreuse sur le fer",
-        "code": """# Placer la foreuse sur le minerai de fer
-iron_pos = nearest(Resource.IronOre)
-move_to(iron_pos)
+        "description": "Crafter un coffre en bois et stocker l'excès.",
+        "code": """# Etape 3: Le stockage
+# Un coffre en bois coûte 2 bois.
 
-# Foreuse qui extrait vers le bas
-iron_drill = place_entity(
-    Prototype.BurnerMiningDrill,
-    position=iron_pos,
-    direction=Direction.DOWN
-)
+inv = inspect_inventory()
+wood_count = inv.get(Prototype.Wood, 0)
 
-# Alimenter avec charbon
-insert_item(Prototype.Coal, iron_drill, quantity=50)
-print(f'Iron drill placed at {iron_drill.position}')""",
+if wood_count < 2:
+    print("Besoin de bois pour le coffre...")
+    tree_pos = nearest(Resource.Tree)
+    move_to(tree_pos)
+    harvest_resource(tree_pos, quantity=2)
+
+# Crafter le coffre
+craft_item(Prototype.WoodChest, quantity=1)
+
+# Le poser à côté du fourneau
+furnace_pos = nearest(Prototype.StoneFurnace)
+chest_pos = Position(x=furnace_pos.x + 1, y=furnace_pos.y)
+move_to(chest_pos)
+
+chest = place_entity(Prototype.WoodChest, chest_pos)
+
+# Mettre tout le surplus de pierre ou bois dedans (garder un peu)
+# Exemple: on met toute la pierre sauf 5
+stone_count = inspect_inventory().get(Prototype.Stone, 0)
+if stone_count > 5:
+    to_store = stone_count - 5
+    insert_item(Prototype.Stone, chest, quantity=to_store)
+    print(f"Stocké {to_store} pierres dans le coffre")
+
+print("✅ Coffre posé et utilisé !")
+""",
     },
+    # ============================================
+    # ETAPE 4: Automatisation simple (Burner Inserter)
+    # ============================================
     {
-        "type": "B2_iron_furnace_line",
-        "category": "B_iron_smelting",
+        "type": "4_simple_automation",
+        "category": "automation",
         "order": 4,
-        "description": "Créer une ligne de fourneaux pour le fer",
-        "code": """# Créer une ligne de 6 fourneaux pour le fer
-# Les fourneaux doivent être alignés pour que le belt passe
+        "description": "Automatiser le fourneau avec un bras robotisé.",
+        "code": """# Etape 4: Première automatisation
+# On veut que le fourneau se remplisse seul.
+# Il faut un Burner Inserter. Coût: 1 Iron Plate + 1 Gear.
+# Gear coût: 2 Iron Plates.
+# Total: 3 Iron Plates.
 
-base_x = iron_drill.drop_position.x
-base_y = iron_drill.drop_position.y + 2
+# Récupérer les plaques de fer du fourneau
+furnace_pos = nearest(Prototype.StoneFurnace)
+move_to(furnace_pos)
+# extract_item retire le contenu (plaques cuites)
+extracted = extract_item(furnace_pos, Prototype.IronPlate) 
+print(f"Récupéré {extracted} plaques de fer")
 
-furnaces = []
-for i in range(6):
-    pos = Position(x=base_x + (i * 2), y=base_y)
-    furnace = place_entity(
-        Prototype.StoneFurnace,
-        position=pos,
-        direction=Direction.UP
-    )
-    insert_item(Prototype.Coal, furnace, quantity=20)
-    furnaces.append(furnace)
-    print(f'Furnace {i+1} at {furnace.position}')
-
-print(f'Created line of {len(furnaces)} furnaces')""",
-    },
-    {
-        "type": "B3_iron_input_belt",
-        "category": "B_iron_smelting",
-        "order": 5,
-        "description": "Belt pour amener le minerai aux fourneaux",
-        "code": """# Belt pour transporter le minerai de fer du drill aux furnaces
-# Le belt va du drill jusqu'aux furnaces
-
-start = iron_drill.drop_position
-end = furnaces[0].position
-
-# Placer des belts en ligne
-for i in range(10):
-    pos = Position(x=start.x, y=start.y + i)
-    place_entity(
-        Prototype.TransportBelt,
-        position=pos,
-        direction=Direction.DOWN
-    )
-
-print('Input belt created for iron ore')""",
-    },
-    {
-        "type": "B4_iron_inserters",
-        "category": "B_iron_smelting",
-        "order": 6,
-        "description": "Inserters pour alimenter les fourneaux",
-        "code": """# Placer des inserters pour prendre le minerai du belt et le mettre dans les fourneaux
-for i, furnace in enumerate(furnaces):
-    # Inserter devant chaque fourneau
-    inserter_pos = Position(x=furnace.position.x, y=furnace.position.y - 1)
-    inserter = place_entity(
-        Prototype.BurnerInserter,
-        position=inserter_pos,
-        direction=Direction.DOWN  # Prend du belt, met dans furnace
-    )
-    insert_item(Prototype.Coal, inserter, quantity=10)
-    print(f'Inserter {i+1} placed')
-
-print('All inserters placed for iron line')""",
-    },
-    {
-        "type": "B5_iron_output_belt",
-        "category": "B_iron_smelting",
-        "order": 7,
-        "description": "Belt de sortie pour les plaques de fer",
-        "code": """# Belt de sortie pour récupérer les plaques de fer des fourneaux
-for i, furnace in enumerate(furnaces):
-    # Belt derrière chaque fourneau (sortie)
-    belt_pos = Position(x=furnace.position.x, y=furnace.position.y + 1)
-    place_entity(
-        Prototype.TransportBelt,
-        position=belt_pos,
-        direction=Direction.RIGHT  # Les plaques vont vers la droite
-    )
-
-print('Output belt created for iron plates')""",
-    },
-    # ============================================
-    # PHASE C: Ligne de fonderie CUIVRE (similaire)
-    # ============================================
-    {
-        "type": "C1_place_copper_drill",
-        "category": "C_copper_smelting",
-        "order": 8,
-        "description": "Placer une foreuse sur le cuivre",
-        "code": """# Placer la foreuse sur le minerai de cuivre
-copper_pos = nearest(Resource.CopperOre)
-move_to(copper_pos)
-
-copper_drill = place_entity(
-    Prototype.BurnerMiningDrill,
-    position=copper_pos,
-    direction=Direction.DOWN
-)
-
-insert_item(Prototype.Coal, copper_drill, quantity=50)
-print(f'Copper drill placed at {copper_drill.position}')""",
-    },
-    {
-        "type": "C2_copper_furnace_line",
-        "category": "C_copper_smelting",
-        "order": 9,
-        "description": "Créer une ligne de fourneaux pour le cuivre",
-        "code": """# Créer une ligne de 6 fourneaux pour le cuivre
-base_x = copper_drill.drop_position.x
-base_y = copper_drill.drop_position.y + 2
-
-copper_furnaces = []
-for i in range(6):
-    pos = Position(x=base_x + (i * 2), y=base_y)
-    furnace = place_entity(
-        Prototype.StoneFurnace,
-        position=pos,
-        direction=Direction.UP
-    )
-    insert_item(Prototype.Coal, furnace, quantity=20)
-    copper_furnaces.append(furnace)
-
-print(f'Created copper smelting line with {len(copper_furnaces)} furnaces')""",
-    },
-    # ============================================
-    # PHASE D: Machines d'assemblage
-    # ============================================
-    {
-        "type": "D1_craft_assemblers",
-        "category": "D_assembly",
-        "order": 10,
-        "description": "Fabriquer des machines d'assemblage",
-        "code": """# Fabriquer des machines d'assemblage
-# Besoin: circuits électroniques, engrenages, plaques de fer
-
-# D'abord faire les circuits manuellement
-craft_item(Prototype.ElectronicCircuit, quantity=10)
-craft_item(Prototype.IronGearWheel, quantity=20)
-
-# Maintenant les assemblers
-craft_item(Prototype.AssemblingMachine1, quantity=3)
-
-inventory = inspect_inventory()
-print(f'Crafted assemblers: {inventory}')""",
-    },
-    {
-        "type": "D2_place_gear_assembler",
-        "category": "D_assembly",
-        "order": 11,
-        "description": "Placer l'assembleur de Iron Gear Wheels",
-        "code": """# Placer l'assembleur pour les engrenages
-# Il doit recevoir des plaques de fer du belt
-
-# Position après la ligne de fourneaux de fer
-gear_assembler_pos = Position(x=furnaces[-1].position.x + 4, y=furnaces[-1].position.y)
-move_to(gear_assembler_pos)
-
-gear_assembler = place_entity(
-    Prototype.AssemblingMachine1,
-    position=gear_assembler_pos,
-    direction=Direction.UP
-)
-
-# Configurer la recette (Iron Gear Wheel)
-set_entity_recipe(gear_assembler, Prototype.IronGearWheel)
-
-print(f'Gear assembler placed at {gear_assembler.position}')""",
-    },
-    {
-        "type": "D3_place_wire_assembler",
-        "category": "D_assembly",
-        "order": 12,
-        "description": "Placer l'assembleur de Copper Wire",
-        "code": """# Placer l'assembleur pour les câbles de cuivre
-wire_assembler_pos = Position(x=copper_furnaces[-1].position.x + 4, y=copper_furnaces[-1].position.y)
-move_to(wire_assembler_pos)
-
-wire_assembler = place_entity(
-    Prototype.AssemblingMachine1,
-    position=wire_assembler_pos,
-    direction=Direction.UP
-)
-
-# Configurer la recette (Copper Cable)
-set_entity_recipe(wire_assembler, Prototype.CopperCable)
-
-print(f'Wire assembler placed at {wire_assembler.position}')""",
-    },
-    # ============================================
-    # PHASE E: Green Circuits!
-    # ============================================
-    {
-        "type": "E1_place_circuit_assembler",
-        "category": "E_circuits",
-        "order": 13,
-        "description": "Placer l'assembleur de Green Circuits",
-        "code": """# L'assembleur final: Electronic Circuits!
-# Il a besoin de: Iron Plates + Copper Cables
-
-circuit_assembler_pos = Position(
-    x=gear_assembler.position.x + 4,
-    y=gear_assembler.position.y
-)
-move_to(circuit_assembler_pos)
-
-circuit_assembler = place_entity(
-    Prototype.AssemblingMachine1,
-    position=circuit_assembler_pos,
-    direction=Direction.UP
-)
-
-# Configurer la recette
-set_entity_recipe(circuit_assembler, Prototype.ElectronicCircuit)
-
-print(f'🟢 GREEN CIRCUIT ASSEMBLER at {circuit_assembler.position}')
-print('MINI-BASE COMPLETE!')""",
-    },
-    {
-        "type": "E2_connect_circuit_inputs",
-        "category": "E_circuits",
-        "order": 14,
-        "description": "Connecter les entrées du circuit assembler",
-        "code": """# Connecter les entrées pour les green circuits
-# Besoin: belt de fer plates + belt de copper cables
-
-# Inserter pour les plaques de fer
-iron_inserter = place_entity_next_to(
-    entity=Prototype.BurnerInserter,
-    reference_position=circuit_assembler.position,
-    direction=Direction.LEFT
-)
-insert_item(Prototype.Coal, iron_inserter, quantity=10)
-
-# Inserter pour les câbles de cuivre
-copper_inserter = place_entity_next_to(
-    entity=Prototype.BurnerInserter,
-    reference_position=circuit_assembler.position,
-    direction=Direction.UP
-)
-insert_item(Prototype.Coal, copper_inserter, quantity=10)
-
-print('Circuit assembler connected!')
-print('🎉 PRODUCTION DE GREEN CIRCUITS EN COURS!')""",
-    },
-    {
-        "type": "E3_verify_production",
-        "category": "E_circuits",
-        "order": 15,
-        "description": "Vérifier que la production fonctionne",
-        "code": """# Vérifier la production
-sleep(30)
-
-# Vérifier chaque machine
-all_entities = get_entities()
-print(f'Total entities placed: {len(all_entities)}')
-
-# Vérifier les assemblers
-for entity in all_entities:
-    if 'assembling' in str(entity.name).lower():
-        print(f'{entity.name} at {entity.position}: {entity.status}')
-
-print('\\n🏭 MINI-BASE STATUS CHECK COMPLETE')""",
+if extracted >= 3:
+    # On craft l'inserter
+    craft_item(Prototype.BurnerInserter, quantity=1)
+    
+    # On le place pour mettre du minerai (depuis un coffre ou le sol)
+    # Disons qu'on met un coffre d'entrée devant
+    chest_pos = Position(x=furnace_pos.x, y=furnace_pos.y + 1)
+    place_entity(Prototype.WoodChest, chest_pos)
+    
+    # Inserter entre le coffre et le fourneau
+    # Chest (y+1) -> Inserter (y+0.5?? non grid integer) -> Furnace (y)
+    # On place l'inserter à côté
+    
+    print("✅ Inserter crafté (concept)")
+else:
+    print("❌ Pas assez de plaques de fer, il faut attendre la cuisson.")
+""",
     },
 ]
 
 
-def inject_minibase_curriculum():
-    """Injecte le curriculum mini-base"""
+def inject_tutorial_curriculum():
+    """Injecte le curriculum tutoriel"""
     # Use project root's data/knowledge/ directory
     project_root = Path(__file__).parent.parent
     kb_dir = project_root / "data" / "knowledge"
     kb_dir.mkdir(parents=True, exist_ok=True)
     kb_file = kb_dir / "megabase_knowledge.json"
 
-    if kb_file.exists():
-        with open(kb_file) as f:
-            kb = json.load(f)
-    else:
-        kb = {
-            "current_phase": 1,
-            "building_blocks": {},
-            "successful_patterns": [],
-            "failed_attempts": [],
-            "phase_milestones": {},
-            "stats": {"total_experiments": 0, "successful": 0, "failed": 0},
-        }
+    # Structure de base propre
+    kb = {
+        "current_phase": 1,
+        "building_blocks": {},
+        "successful_patterns": [],
+        "failed_attempts": [],
+        "phase_milestones": {},
+        "stats": {"total_experiments": 0, "successful": 0, "failed": 0},
+        "goal": GOAL,
+    }
 
-    # Reset to phase 1
-    kb["current_phase"] = 1
-
-    # Add minibase curriculum
+    # Add tutorial curriculum
     kb["building_blocks"]["minibase_curriculum"] = []
 
-    for pattern in MINIBASE_CURRICULUM:
+    print("🏭 INJECTION DU TUTORIEL DÉBUTANT")
+    for pattern in TUTORIAL_CURRICULUM:
         block = {
             "type": pattern["type"],
             "code": pattern["code"].strip(),
@@ -385,20 +204,14 @@ def inject_minibase_curriculum():
             "is_bootstrap": True,
         }
         kb["building_blocks"]["minibase_curriculum"].append(block)
-        print(f"  ✅ {pattern['order']:2}. {pattern['type']}")
-
-    # Add the goal
-    kb["goal"] = GOAL
+        print(f"  ✅ {pattern['order']}. {pattern['type']}")
 
     with open(kb_file, "w") as f:
         json.dump(kb, f, indent=2)
 
-    print("\n🏭 MINIBASE CURRICULUM INJECTED!")
-    print(f"   Total patterns: {len(kb['building_blocks']['minibase_curriculum'])}")
+    print("\n✨ Knowledge Base réinitialisée pour le tutoriel !")
     print(GOAL)
 
 
 if __name__ == "__main__":
-    print("🏭 FACTORIO MINI-BASE BOOTSTRAP")
-    print("=" * 60)
-    inject_minibase_curriculum()
+    inject_tutorial_curriculum()

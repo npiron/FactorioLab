@@ -105,8 +105,12 @@ class FleEnv:
                 "FLE package not found. Install with: pip install factorio-learning-environment[eval]"
             ) from e
 
-    def reset(self) -> StepResult:
-        """Reset FLE environment."""
+    def reset(self, soft: bool = False) -> StepResult:
+        """Reset FLE environment.
+
+        Args:
+            soft: If True, only connect without hard resetting the game state.
+        """
         try:
             # Initialize FLE instance if not already done
             if self.instance is None:
@@ -118,12 +122,16 @@ class FleEnv:
                     fast=True,
                 )
 
-            # Reset the instance
-            self.instance.reset()
+            # Reset the instance ONLY if not soft
+            if not soft:
+                self.instance.reset()
+            else:
+                print("[FleEnv] Soft reset: Skipping game state reset to preserve connection")
+
             self.step_count = 0
 
             return StepResult(
-                stdout="[FleEnv] Reset successful",
+                stdout="[FleEnv] Reset successful (Soft)" if soft else "[FleEnv] Reset successful",
                 stderr="",
                 reward=0.0,
                 info={"seed": self.seed, "mode": "fle", "instance_id": self.instance_id},

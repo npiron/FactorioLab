@@ -342,27 +342,15 @@ def main():
 
     print("\n🔌 Connecting to Factorio...")
     env = FleEnv()
-    obs = env.reset()
+    # Use soft reset to avoid resetting map and kicking connected players
+    print("⚠️  Using soft reset to join existing game...")
+    obs = env.reset(soft=True)
 
-    # 🎁 Bootstrap: Donner des ressources de départ pour accélérer l'apprentissage
-    print("\n🎁 Bootstrapping starter inventory...")
-    starter_code = """
-# Donner des ressources de base pour se concentrer sur la construction
-from factorio_instance import PLAYER_1
-PLAYER_1.insert(Prototype.IronOre, 500)
-PLAYER_1.insert(Prototype.CopperOre, 500)
-PLAYER_1.insert(Prototype.Coal, 500)
-PLAYER_1.insert(Prototype.Stone, 300)
-PLAYER_1.insert(Prototype.IronPlate, 200)
-PLAYER_1.insert(Prototype.CopperPlate, 200)
-print('Starter inventory loaded!')
-"""
-    try:
-        env.step(starter_code)
-        print("✅ Starter resources added to inventory")
-    except Exception as e:
-        print(f"⚠️  Could not add starter inventory: {e}")
-        print("   Agent will start from scratch")
+    # 🎁 Bootstrap: Starter minimal
+    print("\n🎁 Checking starter inventory...")
+    # On laisse l'agent commencer avec l'inventaire par défaut du scénario.
+    # Apprendre à récolter est la première étape du curriculum !
+    print("✅ Ready to learn from scratch")
 
     agent = MegabaseAgent(env, kb)
 
@@ -400,7 +388,7 @@ print('Starter inventory loaded!')
     print(
         f"Success Rate: {kb.knowledge['stats']['successful'] / max(1, kb.knowledge['stats']['total_experiments']) * 100:.1f}%"
     )
-    print(f"Max PS Achieved: {kb.knowledge['stats']['max_ps']}")
+    print(f"Max PS Achieved: {kb.knowledge['stats'].get('max_ps', 0)}")
 
     print(f"\n✅ Knowledge saved to: {kb.kb_file}")
 
