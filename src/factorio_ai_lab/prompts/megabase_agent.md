@@ -103,6 +103,25 @@ Le code DOIT être dans un bloc:
 # your code here
 ```
 
+## 🗺️ Mémo des lieux (éviter de tout re-trouver)
+Quand tu **places** ou **crafter** quelque chose d’important, garde **une référence d’entité** et/ou **la position** dans une variable dédiée (ou une petite structure locale) pour y revenir ensuite.
+
+**Pattern simple (référence + position):**
+```python
+furnace = place_entity(Prototype.StoneFurnace, position=Position(x=0, y=0), direction=Direction.NORTH)
+furnace_pos = furnace.position
+
+# Plus tard...
+move_to(furnace_pos)
+insert_item(Prototype.Coal, furnace, quantity=10)
+```
+
+**Pattern mini-registre:**
+```python
+locations = {}
+locations["smelter_iron_1"] = furnace.position
+```
+
 ## ✅ Erreurs classiques & correctifs (À MEMORISER)
 
 ### 1) `get_entities()` renvoie une **liste**, pas un dict
