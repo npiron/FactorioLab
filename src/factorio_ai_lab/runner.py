@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 from factorio_ai_lab.config import AppConfig
-from factorio_ai_lab.env_adapter import FakeEnv, FleEnv
+from factorio_ai_lab.env_adapter import BaseEnv, FakeEnv, FleEnv
 
 
 def run_episode(cfg: AppConfig, mode: str = "fake") -> None:
@@ -27,6 +27,7 @@ def run_episode(cfg: AppConfig, mode: str = "fake") -> None:
     print(f"[falab] loaded prompt: {cfg.agent.prompt_path} ({len(prompt)} chars)")
 
     # Create environment based on mode
+    env: BaseEnv
     if mode == "fake":
         env = FakeEnv(seed=cfg.run.seed)
     elif mode == "fle":
