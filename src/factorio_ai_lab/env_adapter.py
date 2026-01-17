@@ -96,7 +96,7 @@ class FleEnv:
 
         # Try to import FLE
         try:
-            from fle.env.instance import FactorioInstance  # type: ignore
+            from fle.env.instance import FactorioInstance
 
             self.Instance = FactorioInstance
             self.instance: Any = None

@@ -9,14 +9,19 @@ from pathlib import Path
 from datetime import datetime
 
 
+from typing import Optional, Dict, Any, Union
+
+
 class FactorioMLflowTracker:
-    def __init__(self, experiment_name="factorio-ai"):
+    def __init__(self, experiment_name: str = "factorio-ai") -> None:
         """Initialize MLflow tracking"""
         # Setup MLflow
         mlflow.set_tracking_uri("file:./mlruns")
         mlflow.set_experiment(experiment_name)
 
-    def start_run(self, run_name=None, params=None):
+    def start_run(
+        self, run_name: Optional[str] = None, params: Optional[Dict[str, Any]] = None
+    ) -> Any:
         """Start a new MLflow run"""
         if run_name is None:
             run_name = f"train-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
@@ -29,11 +34,11 @@ class FactorioMLflowTracker:
 
         return mlflow.active_run()
 
-    def log_metrics(self, metrics, step=None):
+    def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None) -> None:
         """Log training metrics"""
         mlflow.log_metrics(metrics, step=step)
 
-    def log_dataset_stats(self, train_path, valid_path):
+    def log_dataset_stats(self, train_path: str, valid_path: str) -> None:
         """Log dataset statistics"""
         # Count examples
         train_count = sum(1 for _ in open(train_path))
@@ -47,7 +52,9 @@ class FactorioMLflowTracker:
             }
         )
 
-    def log_model(self, model_path, adapter_path=None):
+    def log_model(
+        self, model_path: Union[str, Path], adapter_path: Optional[Union[str, Path]] = None
+    ) -> None:
         """Log the trained model"""
         # Log model directory
         mlflow.log_artifacts(str(model_path), artifact_path="model")
@@ -56,11 +63,11 @@ class FactorioMLflowTracker:
         if adapter_path and Path(adapter_path).exists():
             mlflow.log_artifacts(str(adapter_path), artifact_path="adapters")
 
-    def end_run(self):
+    def end_run(self) -> None:
         """End current MLflow run"""
         mlflow.end_run()
 
-    def get_best_run(self, metric="val_loss"):
+    def get_best_run(self, metric: str = "val_loss") -> Any:
         """Get the run with best metric"""
         experiment = mlflow.get_experiment_by_name("factorio-ai")
         runs = mlflow.search_runs(
@@ -71,7 +78,7 @@ class FactorioMLflowTracker:
         return runs.iloc[0] if len(runs) > 0 else None
 
 
-def launch_mlflow_ui():
+def launch_mlflow_ui() -> None:
     """Launch MLflow UI"""
     import subprocess
 

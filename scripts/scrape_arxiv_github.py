@@ -81,7 +81,7 @@ def scrape_github_repo(repo_url):
                 examples.append(
                     {
                         "instruction": "Generate Factorio agent code from FLE examples:",
-                        "input": f"Example {i+1} from official repo",
+                        "input": f"Example {i + 1} from official repo",
                         "output": code[:400],
                     }
                 )
