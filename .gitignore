@@ -1,12 +1,38 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Testing & Linting
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-dist/
-build/
-runs/*
-!runs/.gitkeep
+.coverage
+htmlcov/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# Environment
 .env
 .DS_Store
+
+# Project-specific
+runs/*
+!runs/.gitkeep
+data/logs/*
+!data/logs/.gitkeep
+data/knowledge/*.json
+data/knowledge/*.db
+data/screenshots/*
+!data/screenshots/.gitkeep
+data/training*
+
+# FLE
+.fle/

@@ -1,0 +1,25 @@
+# Training Configuration for Mistral 7B - Factorio Agent
+# Optimized for M1 Pro 32GB RAM
+
+model: ./models/mistral-7b-4bit
+data: ./training_data  # MLX expects directory with train.jsonl
+train: true
+seed: 42
+
+# Hyperparameters - Optimized for 32GB RAM
+lora_layers: 32          # Many layers for 32GB
+batch_size: 8            # Large batch = faster training
+iters: 1500              # 1500 iterations (good for 307 examples)
+steps_per_eval: 100      # Eval every 100 steps
+learning_rate: 1e-4
+val_batches: 10
+
+# LoRA Configuration
+lora_parameters:
+  rank: 16               # Higher rank for 32GB
+  alpha: 32
+  scale: 2.0             # Scale parameter (required by MLX)
+  dropout: 0.05
+  
+# Output
+adapter_file: ./adapters/factorio-mistral-lora

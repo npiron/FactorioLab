@@ -1,4 +1,4 @@
-run:
+wdrun:
   name: "visual-demo"
   max_steps: 10  # Assez pour voir les murs + mouvements
   seed: 42

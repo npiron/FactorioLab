@@ -1,0 +1,8 @@
+{
+    "model": "claude-3-5-sonnet-20241022",
+    "temperature": 0.5,
+    "task": "iron_ore_throughput",
+    "max_steps": 50,
+    "num_runs": 1,
+    "notes": "First test with Claude 3.5 Sonnet - simple iron ore harvesting task"
+}
