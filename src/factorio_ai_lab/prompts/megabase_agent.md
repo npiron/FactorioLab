@@ -103,6 +103,109 @@ Le code DOIT être dans un bloc:
 # your code here
 ```
 
+## 🗺️ Mémo des lieux (éviter de tout re-trouver)
+Quand tu **places** ou **crafter** quelque chose d’important, garde **une référence d’entité** et/ou **la position** dans une variable dédiée (ou une petite structure locale) pour y revenir ensuite.
+
+**Pattern simple (référence + position):**
+```python
+furnace = place_entity(Prototype.StoneFurnace, position=Position(x=0, y=0), direction=Direction.NORTH)
+furnace_pos = furnace.position
+
+# Plus tard...
+move_to(furnace_pos)
+insert_item(Prototype.Coal, furnace, quantity=10)
+```
+
+**Pattern mini-registre:**
+```python
+locations = {}
+locations["smelter_iron_1"] = furnace.position
+```
+
+## ✅ Erreurs classiques & correctifs (À MEMORISER)
+
+### 1) `get_entities()` renvoie une **liste**, pas un dict
+**Erreur:** `AttributeError: 'list' object has no attribute 'get'`
+
+**Pattern robuste:**
+```python
+entities = get_entities()
+chests = [e for e in entities if getattr(e, "name", "") in ("iron-chest", "wooden-chest")]
+chest = chests[0] if chests else None
+```
+
+**Important:** `insert_item(..., entity=...)` attend **l'entité**, pas une `Position`.
+```python
+# ✅ Correct
+insert_item(Prototype.IronOre, chest, quantity=10)
+```
+
+### 2) Ne pas confondre **craft** et **smelt**
+Les plaques (`IronPlate`, `CopperPlate`) **ne se craftent pas** à la main.  
+Elles se **fondent** dans un fourneau.
+
+**Pattern smelt minimal:**
+```python
+furnace = place_entity(Prototype.StoneFurnace, position=Position(x=0, y=0), direction=Direction.NORTH)
+insert_item(Prototype.Coal, furnace, quantity=10)
+insert_item(Prototype.IronOre, furnace, quantity=20)
+sleep(5)
+plates = extract_item(Prototype.IronPlate, furnace, quantity=10)
+```
+
+### 3) Toujours vérifier le charbon avant de fuel
+**Erreur:** `No coal to insert`
+
+**Pattern check:**
+```python
+inv = inspect_inventory()
+if inv.get(Prototype.Coal, 0) == 0:
+    coal_pos = nearest(Resource.Coal)
+    move_to(coal_pos)
+    harvest_resource(coal_pos, quantity=20)
+```
+
+### 4) Placement robuste (éviter l'échec répétitif)
+**Erreur:** `Could not place ...` répété sur la même case
+
+**Pattern "spirale" simple:**
+```python
+def try_place_near(base_pos, prototype, radius=4, direction=Direction.NORTH):
+    for dx in range(1, radius + 1):
+        for dy in (0, 1, -1, 2, -2):
+            pos = Position(x=base_pos.x + dx, y=base_pos.y + dy)
+            entity = place_entity(prototype, position=pos, direction=direction)
+            if entity:
+                return entity
+    return None
+```
+
+## 🎯 Exercices d’entraînement (progressifs)
+
+### Exercice A — Trouver un coffre et y déposer des items
+**Objectif:** maîtriser `get_entities()` + filtrage + `insert_item`.
+- Inspecter l’inventaire
+- Trouver un coffre (wooden/iron)
+- `move_to` coffre
+- `insert_item` sur **l’entité**
+
+**Critère:** pas d’usage de `.get` sur `get_entities()`.
+
+### Exercice B — Smelt loop minimal (ore → plates)
+**Objectif:** cycle complet fourneau + fuel + output.
+- S’assurer d’avoir charbon + ore
+- Placer fourneau sur une case libre
+- Fuel + ore
+- `sleep`
+- `extract_item` plaques
+
+**Critère:** obtention d’`IronPlate` via `extract_item`, pas `craft_item`.
+
+### Exercice C — Placement robuste
+**Objectif:** ne jamais rester bloqué sur `Could not place...`.
+- Utiliser `try_place_near` avec plusieurs positions candidates
+- Valider qu’une position alternative est trouvée
+
 ## 🧠 Factorio Physics & Mechanics (THE LAWS)
 
 You must verify these rules valid before ANY action:
@@ -183,3 +286,4 @@ You must verify these rules valid before ANY action:
 3. **Verify Placement**: Use `get_entities()` to verify if your buildings are actually there.
 4. **Clean Code**: Use `nearest`, `move_to`, `place_entity` directly.
 5. **No Hallucinations**: Only use `Prototype.*` and `Resource.*` provided in the API docs.
+6. **Remember Crafting Locations**: Track where you craft/place production (e.g., mall, smelting block) and store entity references/positions so you can return to them instead of searching randomly.
