@@ -50,7 +50,7 @@ def pdf_to_examples(pdf_path):
             examples.append(
                 {
                     "instruction": "Explain based on Factorio documentation:",
-                    "input": f"From {pdf_path.name}, page {page_num+1}",
+                    "input": f"From {pdf_path.name}, page {page_num + 1}",
                     "output": para[:400],  # Limit length
                 }
             )

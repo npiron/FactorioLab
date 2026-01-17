@@ -22,7 +22,7 @@ Les fonctions sont disponibles directement dans le namespace:
 - `place_entity_next_to(entity=Prototype.X, reference_position=pos, direction=Direction.Y)` → Placer à côté
 - `insert_item(Prototype.Item, entity, quantity=N)` → Insérer dans une entité
 - `extract_item(Prototype.Item, entity, quantity=N)` → Extraire d'une entité
-- `inspect_inventory()` → Voir l'inventaire
+- `inspect_inventory()` → Retourne Dict[Prototype, int] (ex: {Prototype.Coal: 50})
 - `get_entities()` → Voir toutes les entités placées
 - `sleep(seconds)` → Attendre N secondes
 

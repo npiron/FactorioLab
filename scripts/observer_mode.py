@@ -19,7 +19,7 @@ print('📸 Screenshot saved')
 """
 
 for i in range(10):
-    print(f"\n📸 Capture {i+1}/10...")
+    print(f"\n📸 Capture {i + 1}/10...")
     obs = env.step(code)
     time.sleep(2)  # Wait 2 seconds between captures
 

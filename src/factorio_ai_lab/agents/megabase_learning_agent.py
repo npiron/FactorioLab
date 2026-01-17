@@ -7,9 +7,10 @@ import os
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from openai import OpenAI
 from dotenv import load_dotenv
-from factorio_ai_lab.env_adapter import FleEnv
+from factorio_ai_lab.env_adapter import FleEnv, StepResult
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -54,7 +55,7 @@ class MegabaseKnowledgeBase:
         },
     }
 
-    def __init__(self, kb_file=None):
+    def __init__(self, kb_file: Optional[Union[str, Path]] = None) -> None:
         if kb_file is None:
             kb_dir = PROJECT_ROOT / "data" / "knowledge"
             kb_dir.mkdir(parents=True, exist_ok=True)
@@ -63,10 +64,11 @@ class MegabaseKnowledgeBase:
             self.kb_file = Path(kb_file)
         self.knowledge = self.load()
 
-    def load(self):
+    def load(self) -> Dict[str, Any]:
         if self.kb_file.exists():
             with open(self.kb_file) as f:
-                return json.load(f)
+                data = json.load(f)
+                return cast(Dict[str, Any], data)
         return {
             "current_phase": 1,
             "building_blocks": {},  # Organized by phase
@@ -82,14 +84,14 @@ class MegabaseKnowledgeBase:
             },
         }
 
-    def save(self):
+    def save(self) -> None:
         with open(self.kb_file, "w") as f:
             json.dump(self.knowledge, f, indent=2)
 
-    def get_current_phase(self):
+    def get_current_phase(self) -> Dict[str, Any]:
         return self.PHASES[self.knowledge["current_phase"]]
 
-    def advance_phase(self):
+    def advance_phase(self) -> None:
         """Move to next phase when milestones are met"""
         current = self.knowledge["current_phase"]
         if current < 5:
@@ -99,7 +101,13 @@ class MegabaseKnowledgeBase:
             )
             self.save()
 
-    def add_pattern(self, pattern_type, code, phase, metrics=None):
+    def add_pattern(
+        self,
+        pattern_type: str,
+        code: str,
+        phase: int,
+        metrics: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """Add pattern organized by curriculum phase"""
         phase_key = f"phase_{phase}"
         if phase_key not in self.knowledge["building_blocks"]:
@@ -119,12 +127,19 @@ class MegabaseKnowledgeBase:
         self.save()
         return block
 
-    def get_patterns_for_phase(self, phase):
+    def get_patterns_for_phase(self, phase: int) -> List[Dict[str, Any]]:
         """Get all validated patterns for a phase"""
         phase_key = f"phase_{phase}"
-        return self.knowledge["building_blocks"].get(phase_key, [])
+        return cast(List[Dict[str, Any]], self.knowledge["building_blocks"].get(phase_key, []))
 
-    def record_experiment(self, pattern, success, phase, metrics=None, error=None):
+    def record_experiment(
+        self,
+        pattern: str,
+        success: bool,
+        phase: int,
+        metrics: Optional[Dict[str, Any]] = None,
+        error: Optional[str] = None,
+    ) -> None:
         experiment = {
             "pattern": pattern,
             "success": success,
@@ -159,13 +174,13 @@ class MegabaseKnowledgeBase:
 class MegabaseAgent:
     """Curriculum-based megabase agent with knowledge persistence"""
 
-    def __init__(self, env, kb):
+    def __init__(self, env: FleEnv, kb: MegabaseKnowledgeBase) -> None:
         self.env = env
         self.kb = kb
-        self.memory = []
-        self.current_goal = None
+        self.memory: List[Dict[str, Any]] = []
+        self.current_goal: Optional[str] = None
 
-    def get_system_prompt(self):
+    def get_system_prompt(self) -> str:
         """Generate context-aware system prompt with curriculum"""
         phase = self.kb.get_current_phase()
 
@@ -211,11 +226,11 @@ class MegabaseAgent:
 
 ## CURRENT STATUS
 
-🎯 **Current Phase: {self.kb.knowledge['current_phase']} - {phase['name']}**
+🎯 **Current Phase: {self.kb.knowledge["current_phase"]} - {phase["name"]}**
 
 📊 **Progress**:
-- Total Experiments: {self.kb.knowledge['stats']['total_experiments']}
-- Success Rate: {self.kb.knowledge['stats']['successful'] / max(1, self.kb.knowledge['stats']['total_experiments']) * 100:.1f}%
+- Total Experiments: {self.kb.knowledge["stats"]["total_experiments"]}
+- Success Rate: {self.kb.knowledge["stats"]["successful"] / max(1, self.kb.knowledge["stats"]["total_experiments"]) * 100:.1f}%
 - Guide Progress: {len(learned_types)}/{len(guide_patterns)} étapes
 
 ## 📚 PROCHAINES ÉTAPES DU GUIDE:
@@ -236,7 +251,7 @@ class MegabaseAgent:
 Generate ONLY Python code. One action at a time.
 """
 
-    def think(self, observation):
+    def think(self, observation: StepResult) -> str:
         """Generate next action with curriculum awareness"""
 
         recent = (
@@ -254,24 +269,27 @@ Generate ONLY Python code. One action at a time.
 Recent steps:
 {recent}
 
-Output: {observation.stdout[-300:] if observation.stdout else 'Ready'}
-Error: {observation.stderr[-200:] if observation.stderr else 'None'}
+Output: {observation.stdout[-300:] if observation.stdout else "Ready"}
+Error: {observation.stderr[-200:] if observation.stderr else "None"}
 
 What's the next step towards the phase goal? 
-Generate Python code only. Focus on {self.kb.get_current_phase()['goal']}.
+Generate Python code only. Focus on {self.kb.get_current_phase()["goal"]}.
 """
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": self.get_system_prompt()},
-                {"role": "user", "content": user_message},
-            ],
+            messages=cast(
+                Any,
+                [
+                    {"role": "system", "content": self.get_system_prompt()},
+                    {"role": "user", "content": user_message},
+                ],
+            ),
             max_tokens=600,
             temperature=0.5,
         )
 
-        code = response.choices[0].message.content
+        code = response.choices[0].message.content or ""
 
         # Extract code
         if "```python" in code:
@@ -281,7 +299,7 @@ Generate Python code only. Focus on {self.kb.get_current_phase()['goal']}.
 
         return code
 
-    def execute_and_learn(self, code):
+    def execute_and_learn(self, code: str) -> Tuple[StepResult, bool]:
         """Execute and learn with curriculum tracking"""
         print(f"\n💻 Phase {self.kb.knowledge['current_phase']} Action:\n{code}\n")
 
@@ -329,7 +347,7 @@ Generate Python code only. Focus on {self.kb.get_current_phase()['goal']}.
 # ============================================================================
 
 
-def main():
+def main() -> None:
     print("🏗️  Starting Megabase Self-Learning Agent...")
     print("📚 Loading curriculum knowledge base...")
 
@@ -358,9 +376,9 @@ def main():
     print("=" * 60)
 
     for step in range(100):  # 100 steps pour construire une vraie mini-base
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"STEP {step} | Phase {kb.knowledge['current_phase']}: {phase['name']}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         code = agent.think(obs)
         obs, success = agent.execute_and_learn(code)
@@ -373,7 +391,7 @@ def main():
         if step % 5 == 0 and step > 0:
             stats = kb.knowledge["stats"]
             print(
-                f"\n📊 Progress: {stats['successful']}/{stats['total_experiments']} successful ({stats['successful']/max(1,stats['total_experiments'])*100:.1f}%)"
+                f"\n📊 Progress: {stats['successful']}/{stats['total_experiments']} successful ({stats['successful'] / max(1, stats['total_experiments']) * 100:.1f}%)"
             )
 
     env.close()
