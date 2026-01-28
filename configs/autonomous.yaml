@@ -1,0 +1,12 @@
+run:
+  name: "autonomous-agent"
+  max_steps: 50  # High-level goal steps
+  seed: 42
+
+agent:
+  type: "autonomous"
+  target_milestone: "craft_burner_drill"
+  verbose: true
+
+paths:
+  runs_dir: "runs"

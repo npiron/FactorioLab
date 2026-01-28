@@ -127,13 +127,57 @@ if stone_count > 5:
 print("✅ Coffre posé et utilisé !")
 """,
     },
-    # ============================================
-    # ETAPE 4: Automatisation simple (Burner Inserter)
-    # ============================================
     {
-        "type": "4_simple_automation",
+        "type": "4_automated_mining",
         "category": "automation",
         "order": 4,
+        "description": "Automatiser le minage avec une Forreuse Thermique (Burner Mining Drill).",
+        "code": """# Etape 4: Automatiser le minage
+# On ne veut plus miner à la main !
+# Il faut une Burner Mining Drill.
+# Coût: 3 Iron Gear + 1 Stone Furnace + 3 Iron Plate.
+
+# Vérifier ressources
+inv = inspect_inventory()
+iron_plate = inv.get(Prototype.IronPlate, 0)
+stone = inv.get(Prototype.Stone, 0)
+
+if iron_plate >= 3 and stone >= 5: # Assez pour furnace + un peu de reste
+    # Craft
+    drill = craft_item(Prototype.BurnerMiningDrill, quantity=1)
+    print(f"✅ Crafté: {drill} Burner Mining Drill")
+    
+    # Placer sur du CHARBON (pour s'auto-alimenter plus tard) ou FER
+    # Priorité: Charbon (Energie)
+    coal_pos = nearest(Resource.Coal)
+    
+    # Trouver une case valide sur le charbon
+    move_to(coal_pos)
+    drill_ent = place_entity(Prototype.BurnerMiningDrill, coal_pos)
+    
+    if drill_ent:
+        # Placer un coffre devant la sortie (Position + Direction)
+        # Simplification: on pose juste à côte
+        chest_pos = Position(x=coal_pos.x, y=coal_pos.y+1) # Hypothèse sortie Sud
+        place_entity(Prototype.WoodChest, chest_pos)
+        
+        # Mettre du carburant dans la forreuse
+        insert_item(Prototype.Coal, drill_ent, quantity=5)
+        print("✅ Forreuse posée et alimentée sur le charbon !")
+    else:
+        print("❌ Impossible de poser la forreuse (collision ?)")
+
+else:
+    print(f"❌ Pas assez de ressources pour la forreuse (Fer: {iron_plate}, Pierre: {stone})")
+""",
+    },
+    # ============================================
+    # ETAPE 5: Automatisation simple (Burner Inserter)
+    # ============================================
+    {
+        "type": "5_simple_automation",
+        "category": "automation",
+        "order": 5,
         "description": "Automatiser le fourneau avec un bras robotisé.",
         "code": """# Etape 4: Première automatisation
 # On veut que le fourneau se remplisse seul.

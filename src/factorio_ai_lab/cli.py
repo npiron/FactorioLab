@@ -25,3 +25,7 @@ def main() -> None:
         run_episode(cfg, mode=args.mode)
     else:
         raise SystemExit("Unknown command")
+
+
+if __name__ == "__main__":
+    main()

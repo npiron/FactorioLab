@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import warnings
+
+# Suppress gym deprecation warning before importing anything that uses gym
+warnings.filterwarnings("ignore", message=".*Gym has been unmaintained.*")
+
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -53,24 +58,72 @@ class FakeEnv:
     def step(self, code: str) -> StepResult:
         """Simulate executing code."""
         self.step_count += 1
+        stdout = ""
 
-        # Simulate some basic responses
-        if "print" in code:
+        # Simple state simulation
+        if not hasattr(self, "inventory"):
+            self.inventory = {}
+
+        # Parse commands roughly
+        if "gather" in code:
+            import re
+
+            m = re.search(r"gather\(['\"](\w+)['\"],\s*qty=(\d+)\)", code)
+            if not m:
+                m = re.search(r"gather\(['\"](\w+)['\"],\s*(\d+)\)", code)
+            if m:
+                item = m.group(1)
+                qty = int(m.group(2))
+                self.inventory[item] = self.inventory.get(item, 0) + qty
+                stdout += f"🌲 Gathering {qty} {item}...\n"
+                stdout += f"✅ Harvested {qty}\n"
+
+        if "craft" in code:
+            import re
+
+            m = re.search(r"craft\(['\"](\w+)['\"],\s*(\d+)\)", code)
+            if m:
+                item = m.group(1)
+                qty = int(m.group(2))
+                self.inventory[item] = self.inventory.get(item, 0) + qty
+                stdout += f"🔨 Crafting {qty} {item}...\n"
+                stdout += f"✅ Crafted {qty}\n"
+
+        if "place" in code:
+            import re
+
+            m = re.search(r"place\(['\"](\w+)['\"]", code)
+            if m:
+                item = m.group(1)
+                stdout += f"🏗️ Placing {item}...\n"
+                stdout += "✅ Placed at Position(x=10, y=10)\n"
+
+        if "check_inventory" in code or "inspect_inventory" in code:
+            # Format inventory like real FLE
+            inv_str = ", ".join([f"'{k}': {v}" for k, v in self.inventory.items()])
+            stdout += f"📦 Inventory: {{{inv_str}}}\n"
+
+        if "smelt" in code:
+            import re
+
+            m = re.search(r"smelt\(['\"](\w+)['\"],\s*['\"](\w+)['\"],\s*(\d+)\)", code)
+            if m:
+                src, dst, qty = m.groups()
+                qty = int(qty)
+                self.inventory[dst] = self.inventory.get(dst, 0) + qty
+                stdout += f"🔥 Smelting {qty} {src} -> {dst}...\n"
+                stdout += f"✅ Smelted {qty} {dst}\n"
+
+        # Look for simple print
+        if not stdout and "print" in code:
             stdout = f"[FakeEnv] Executed: {code[:50]}..."
-        else:
-            stdout = f"[FakeEnv] Step {self.step_count} executed"
 
-        # Simulate progressive reward
+        # Fallback
+        if not stdout:
+            stdout = "[FakeEnv] No output"
+
         reward = float(self.step_count) * 0.1
-
-        # Simulate some fake metrics
-        info = {
-            "step": self.step_count,
-            "ps": self.step_count * 10.0,  # Fake Production Score
-            "milestones": {"iron-plate": self.step_count // 5},
-            "mode": "fake",
-        }
-
+        info = {"step": self.step_count, "mode": "fake"}
         done = self.step_count >= self.max_steps
 
         return StepResult(

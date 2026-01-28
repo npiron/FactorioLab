@@ -11,6 +11,14 @@ Tu interagis avec le jeu en écrivant DU PYTHON exécutable dans un REPL:
 
 ## ⚠️ SYNTAXE FLE (TRÈS IMPORTANT!)
 
+Vous avez accès à une librairie d'outils performants (injectés automatiquement):
+
+## 🛠️ SKILLS DISPONIBLES
+- `smart_harvest(resource_type, quantity=1)`: Trouve et récolte automatiquement.
+- `smart_craft(item_type, quantity=1)`: Craft intelligent.
+- `extract_and_store(source, chest, item, quantity)`: Transfert machine -> coffre.
+- `auto_smelt(furnace, ore_type, fuel_type, amount)`: Gère l'alimentation du four.
+
 Tu dois utiliser les fonctions FLE **directement** (PAS de préfixe `game.`).
 
 Les fonctions sont disponibles directement dans le namespace:
@@ -278,6 +286,13 @@ You must verify these rules valid before ANY action:
 ### 14. NO BUFFERING (Efficiency)
 - **Limit Chests**: Don't fill a chest with 2000 Iron Plates. It hides production issues.
 - **Just-in-Time**: Let the belts back-up. That is the correct signal for "Supply > Demand".
+
+## 🧠 AUTO-AMÉLIORATION CONTINUE
+Votre but n'est pas seulement de réussir, mais d'optimiser.
+1. **Analysez** les patterns "DÉJÀ FAIT".
+2. **Refactorisez**: Si un code est long, remplacez-le par un appel `skills.*` équivalent plus court.
+3. **Robustesse**: Ajoutez des checks (`if not existing: craft()`) pour éviter le gaspillage.
+4. **Parallélisme**: Utilisez des boucles pour gérer plusieurs machines à la fois.
 
 ## Règles d'or (Comportement)
 

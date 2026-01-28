@@ -21,7 +21,13 @@ class PathsConfig:
 
 @dataclass(frozen=True)
 class AgentConfig:
-    prompt_path: str
+    # Legacy field (for old configs)
+    prompt_path: str = ""
+
+    # New autonomous agent fields
+    agent_type: str = "legacy"  # "legacy", "autonomous"
+    target_milestone: str = "craft_burner_drill"
+    verbose: bool = True
 
 
 @dataclass(frozen=True)
@@ -37,11 +43,18 @@ def _req(d: dict[str, Any], key: str) -> Any:
     return d[key]
 
 
+def _opt(d: dict[str, Any], key: str, default: Any) -> Any:
+    return d.get(key, default)
+
+
 def load_config(path: Path) -> AppConfig:
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     run = _req(raw, "run")
     paths = _req(raw, "paths")
-    agent = _req(raw, "agent")
+    agent = raw.get("agent", {})
+
+    # Handle both old and new config formats
+    agent_type = _opt(agent, "type", "legacy")
 
     return AppConfig(
         run=RunConfig(
@@ -50,5 +63,10 @@ def load_config(path: Path) -> AppConfig:
             seed=int(_req(run, "seed")),
         ),
         paths=PathsConfig(runs_dir=str(_req(paths, "runs_dir"))),
-        agent=AgentConfig(prompt_path=str(_req(agent, "prompt_path"))),
+        agent=AgentConfig(
+            prompt_path=_opt(agent, "prompt_path", ""),
+            agent_type=agent_type,
+            target_milestone=_opt(agent, "target_milestone", "craft_burner_drill"),
+            verbose=_opt(agent, "verbose", True),
+        ),
     )
